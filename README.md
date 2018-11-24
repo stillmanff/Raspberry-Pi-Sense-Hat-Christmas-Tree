@@ -1,2 +1,1 @@
-# Raspberry-Pi-Sense-Hat-Christmas-Tree
-Holiday display for the Sense Hat.
+﻿Just in time for Christmas, a Christmas tree with flashing colored decorations and a red star on top. The color and shape of the tree and the speed at which the colors change can be altered by changing the parameters at the top of the code. Directions are in the comments.
