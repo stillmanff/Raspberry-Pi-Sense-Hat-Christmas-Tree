@@ -94,15 +94,12 @@ while True:
         topdelay = 0
     sleep(twinkleInterval)
     if (not treeAlwaysActive) & (time.localtime().tm_hour == quietTimeStartHour) & (time.localtime().tm_min == quietTimeStartMinute):    #Run this test only if we want the tree to cycle
-        print "tree off"
         tree = sense.get_pixels()        #save the state of the tree
         sense.clear()                    #lights out
         treeActive = False               #Stop the show
         while not treeActive:
-            print "checking " + time.asctime(time.localtime(time.time()))
             sleep(30)                      #Checking twice a minute should be enough
             if (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute):       #Time to start up again
-                print "tree on"
                 sense.set_pixels(tree)       #Restore the tree
                 treeActive = True            #Restart the show
           

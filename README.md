@@ -3,4 +3,7 @@
 Revision 11/25/2018:
 Discovered a bug that caused the tree to gradually turn brown. Fixed the problem but kept the behavior by creating a treeDies flag. Also responded to a request that the tree automatically go on and off on a schedule using the treeActive flag. State of the tree is saved before clearing the display, and restored when the tree restarts. Schedule for starting and stopping the tree are settable.
 
-11/26/2018: fixed indentation bug.
+11/26/2018: fixed indentation bug. Removed debug code.
+
+
+Note: Default behavior - tree on all the time, doesn't die, top light cycles once per second.
