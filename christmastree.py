@@ -7,6 +7,19 @@ from time import sleep
 
 sense = SenseHat()
 
+#Variables section (change these to change the way the program behaves. Let everything else alone.
+#Timing parameters (how often things change)
+twinkleInterval = 0.01                        #Interval in seconds between changes in any light
+treetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off
+treeDies = False                              #Turn a bug into a feature - if true, the tree gradually turns brown (takes about 2 days)
+quietTimeStartHour = 22                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
+quietTimeStartMinute = 0
+activeTimeStartHour = 7
+activeTimeStartMinute = 0
+treeActive = True                             #Start with tree working
+treeAlwaysActive = True                       #Overrides treeActive. If on, tree is always on regardless of clock settings.
+#End of variables section
+
 #Constant section
 #Colors are pretty much the best we can get
 #Change all tree behaviors with these parameters
@@ -28,9 +41,6 @@ brown        = [208,220,48]    # brown (Maybe look for a better brown, but there
 red          = [252,0,0]     # red
 cyan         = [0,252,252] # cyan - not used at the moment
 
-#Timing parameters (how often things change)
-twinkleInterval = 0.01                        #Interval in seconds between changes in any light
-treetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off
 
 #Feel free to change the shape of the tree. The shape will be preserved because of the rules listed above
 #  but the colors of individual pixels will flicker between green and a random color.
@@ -57,7 +67,7 @@ sense.set_pixels(tree)
 topdelay = 0      #Count period for blinking top light
 while True:
     randx = random.randint(0,7)        #X position
-    randy = random.randint(1,7)        #Y position - don't cover the trunk
+    randy = random.randint(0,6)        #Y position - don't cover the trunk (row 7)
     randr = random.randint(4,252)      #red component of new color (anything less than 4 rounds to 0)
     randg = random.randint(4,252)      #green component of new color
     randb = random.randint(4,252)      #blue component of new color
@@ -66,7 +76,8 @@ while True:
         pass
     elif pixel == black:             #Leave background pixels alone 
         pass
-    elif pixel == brown:           #Leave the trunk alone
+    #Use this clause only if treeDies is true. The tree eventually all turns brown. Trunk is protected now by exempting the bottom row from selection.
+    elif treeDies & (pixel == brown):           #Leave the trunk alone
         pass
     elif pixel == green:            #Turn green pixels into random christmas lights
         sense.set_pixel(randx,randy,randr,randb,randg)
@@ -82,3 +93,13 @@ while True:
             sense.set_pixel(4,0,black)
         topdelay = 0
     sleep(twinkleInterval)
+    if (not treeAlwaysActive) & (time.localtime().tm_hour == quietTimeStartHour) & (time.localtime().tm_min == quietTimeStartMinute):    #Run this test only if we want the tree to cycle
+      tree = sense.get_pixels()        #save the state of the tree
+      sense.clear()                    #lights out
+      treeActive = False               #Stop the show
+      while not treeActive:
+        sleep(30)                      #Checking twice a minute should be enough
+        if (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute):       #Time to start up again
+          sense.set_pixels(tree)       #Restore the tree
+          treeActive = True            #Restart the show
+          
