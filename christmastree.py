@@ -13,10 +13,10 @@ twinkleInterval = 0.01                        #Interval in seconds between chang
 treetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off
 treeDies = False                              #Turn a bug into a feature - if true, the tree gradually turns brown (takes about 2 days)
 quietTimeStartHour = 22                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
-quietTimeStartMinute = 0
+quietTimeStartMinute = 30
 activeTimeStartHour = 7
-activeTimeStartMinute = 0
-treeActive = True                             #Start with tree working
+activeTimeStartMinute = 30
+treeActive = True                             #Starting state of tree
 treeAlwaysActive = True                       #Overrides treeActive. If on, tree is always on regardless of clock settings.
 #End of variables section
 
@@ -94,12 +94,15 @@ while True:
         topdelay = 0
     sleep(twinkleInterval)
     if (not treeAlwaysActive) & (time.localtime().tm_hour == quietTimeStartHour) & (time.localtime().tm_min == quietTimeStartMinute):    #Run this test only if we want the tree to cycle
-      tree = sense.get_pixels()        #save the state of the tree
-      sense.clear()                    #lights out
-      treeActive = False               #Stop the show
-      while not treeActive:
-        sleep(30)                      #Checking twice a minute should be enough
-        if (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute):       #Time to start up again
-          sense.set_pixels(tree)       #Restore the tree
-          treeActive = True            #Restart the show
+        print "tree off"
+        tree = sense.get_pixels()        #save the state of the tree
+        sense.clear()                    #lights out
+        treeActive = False               #Stop the show
+        while not treeActive:
+            print "checking " + time.asctime(time.localtime(time.time()))
+            sleep(30)                      #Checking twice a minute should be enough
+            if (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute):       #Time to start up again
+                print "tree on"
+                sense.set_pixels(tree)       #Restore the tree
+                treeActive = True            #Restart the show
           
