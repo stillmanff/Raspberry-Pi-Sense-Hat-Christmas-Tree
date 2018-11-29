@@ -12,10 +12,10 @@ sense = SenseHat()
 twinkleInterval = 0.01                        #Interval in seconds between changes in any light
 treetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off
 treeDies = False                              #Turn a bug into a feature - if true, the tree gradually turns brown (takes about 2 days)
-quietTimeStartHour = 22                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
-quietTimeStartMinute = 30
+quietTimeStartHour = 0                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
+quietTimeStartMinute = 0
 activeTimeStartHour = 7
-activeTimeStartMinute = 30
+activeTimeStartMinute = 01
 treeActive = True                             #Starting state of tree
 treeAlwaysActive = True                       #Overrides treeActive. If on, tree is always on regardless of clock settings.
 #End of variables section
@@ -97,9 +97,23 @@ while True:
         tree = sense.get_pixels()        #save the state of the tree
         sense.clear()                    #lights out
         treeActive = False               #Stop the show
-        while not treeActive:
-            sleep(30)                      #Checking twice a minute should be enough
-            if (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute):       #Time to start up again
-                sense.set_pixels(tree)       #Restore the tree
-                treeActive = True            #Restart the show
+        sleepMinutes = (activeTimeStartMinute - quietTimeStartMinute)    #how many seconds in the last hour of sleep
+        sleepHours = (activeTimeStartHour - quietTimeStartHour)     #How many integer hours to sleep, in seconds
+        if sleepHours < 0:
+            sleepHours = sleepHours + 24                          #Add a day in seconds
+        if sleepMinutes > 0:
+            sleepSeconds = (sleepHours * 3600) + (sleepMinutes * 60)                          #Add to minutes if it's positive
+        else:
+            sleepMinutes = 60 + sleepMinutes                                #Subtract the balance of the hour from the total hours
+            sleepSeconds = ((sleepHours - 1) * 3600) + (sleepMinutes * 60)
+        #print "Hours = " + str(sleepHours) + ", Minutes = " + str(sleepMinutes) + ", seconds = " + str(sleepSeconds) + " Total time " + str(sleepSeconds / 3600) + ":" + str((sleepSeconds / 60) % 60)
+        sleep(sleepSeconds)                                                   #Go to sleep
+        treeActive = True
+        sense.set_pixels(tree)
+#Old method for waiting to wake. Swapped out for more efficient method. Let the computer do the work.
+#        while not treeActive:
+#            sleep(30)                      #Checking twice a minute should be enough
+#            if (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute):       #Time to start up again
+#                sense.set_pixels(tree)       #Restore the tree
+#                treeActive = True            #Restart the show
           
