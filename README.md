@@ -7,4 +7,6 @@ Discovered a bug that caused the tree to gradually turn brown. Fixed the problem
 
 11/29/2018: changed sleep method to use sleep() function instead of checking time periodically.
 
+12/4/2018: added on/off switch. Pressing the center button of the joystick turns the tree display on and off. The state is saved so it picks up where it left off. This feature is compatible with timed on/off - if the tree is turned on/off manually, it will change state at the next scheduled time. Also added comments to make the program easier to understand.
+
 Note: Default behavior - tree on all the time, doesn't die, top light cycles once per second, other lights twinkle once per 0.01 second.
