@@ -21,11 +21,12 @@ cyan         = [0,252,252] # cyan - not used at the moment
 twinkleInterval = 0.01                        #Interval in seconds between changes in any light
 treetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off
 treeDies = False                              #Turn a bug into a feature - if true, the tree gradually turns brown (takes about 2 days)
-quietTimeStartHour = 0                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
-quietTimeStartMinute = 10
+quietTimeStartHour = 23                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
+quietTimeStartMinute = 0
 activeTimeStartHour = 7
 activeTimeStartMinute = 0
-treeAlwaysActive = True                       #If True, tree is always on regardless of clock settings.
+treeAlwaysActive = False                       #If True, tree is always on regardless of clock settings.
+sense.low_light = True                        #Start with dim lights - it just looks better.
 #End of variables section
 ###########################################################################################################################################
 
@@ -62,7 +63,7 @@ def holdTree():           #routine to turn off tree on middle button press, then
                 if ((turnTreeOn[len(turnTreeOn) - 1].direction == "middle") & (turnTreeOn[len(turnTreeOn) - 1].action == "released")):    #If we want timed on/off, check for button and time
                     passedTest = True
                 else:
-                    pass
+                    lightLevel(turnTreeOn)                      #Are we trying to dim or brighten the tree?
             else:
                 if ((not(treeAlwaysActive)) & (time.localtime().tm_hour == activeTimeStartHour) & (time.localtime().tm_min == activeTimeStartMinute) & (time.localtime().tm_sec < 3)):    #We only test for time if the button test failed. Added a 3 second tolerance so the tree can be turned off in the first minute after turned on by timer
                     passedTest = True
@@ -77,6 +78,16 @@ def holdTree():           #routine to turn off tree on middle button press, then
         else:
             pass
 
+def lightLevel(turnTreeOn):
+    #Note that the tree is meant to be run with the Pi inverted, so up is literally down. That explains the reversed logic in this method.
+        if ((turnTreeOn[len(turnTreeOn) - 1].direction == "up") & (turnTreeOn[len(turnTreeOn) - 1].action == "released")):      #Up and down are switches for full light and low light
+            sense.low_light = True                                                                                                #Dim display (up is actually down)
+        elif ((turnTreeOn[len(turnTreeOn) - 1].direction == "down") & (turnTreeOn[len(turnTreeOn) - 1].action == "released")):     
+            sense.low_light = False                                                                                               #Bright display (down is actually up)
+        else:
+            pass
+    
+        
 #Feel free to change the shape of the tree. The shape you choose will be preserved because of the rules listed above
 #  but the colors of individual pixels will flicker between green and a random color.
 
@@ -105,6 +116,8 @@ while True:
     if len(switchOff) > 0:
         if (switchOff[len(switchOff) - 1].direction == "middle") & (switchOff[len(switchOff) - 1].action == "released"):    #Was the middle button pressed?
             holdTree()
+        else:
+            lightLevel(switchOff)              #Are we trying to dim or brighten the tree?
     randx = random.randint(0,7)        #X position
     randy = random.randint(0,6)        #Y position - don't cover the trunk (row 7)
     randr = random.randint(4,252)      #red component of new color (anything less than 4 rounds to 0)

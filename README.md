@@ -9,4 +9,6 @@ Discovered a bug that caused the tree to gradually turn brown. Fixed the problem
 
 12/4/2018: added on/off switch. Pressing the center button of the joystick turns the tree display on and off. The state is saved so it picks up where it left off. This feature is compatible with timed on/off - if the tree is turned on/off manually, it will change state at the next scheduled time. Also added comments to make the program easier to understand.
 
+12/17/2018: LEDs are very bright, so added function to the up and down movements of the switch to exit and enter low_light mode. Note that the program is designed to be run inverted (power cable on the top of the Pi), so the down and up functions of the switch are reversed. Also changed default behavior to turn on and off once per day, instead of running all the time.
+
 Note: Default behavior - tree on all the time, doesn't die, top light cycles once per second, other lights twinkle once per 0.01 second.
