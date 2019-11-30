@@ -27,6 +27,8 @@ activeTimeStartHour = 7
 activeTimeStartMinute = 0
 treeAlwaysActive = False                       #If True, tree is always on regardless of clock settings.
 sense.low_light = True                        #Start with dim lights - it just looks better.
+barometerInterval = 1800   # Update barometer value in seconds - twice per hour seems like a good interval
+blinkingBarometer = True   # Enable tree topper as barometric pressure indicator
 #End of variables section
 ###########################################################################################################################################
 
@@ -45,6 +47,8 @@ sense.low_light = True                        #Start with dim lights - it just l
 #5a. The cycle time of the flashing red tree topper is once per second by default but can be changed with the treetopInterval variable.
 #6. The tree can be set to cycle on and off once a day using the activeTime and quietTime variables.
 #7. The tree can be turned on and off manually using the center button of the SenseHat joystick. This does not interrupt the timed on/off cycle.
+#8. The tree display can be dimmed or brightened using the up and down functions of the SenseHat joystick.
+#9. The flashing light at the top of the tree indicates rising (green), falling (red), or steady (white) barometric pressure. Pressure compared to 2 decimal places of in/Hg. Comparison time interval is settable.
 
 #Sleep loop. This operation is complicated by the fact that neither the Python sleep() function nor the SenseHat wait_for_events() function are interruptible, so
 #designing a routine that allows two different ways to interrupt the dormant stage (time and button press) is a little involved. This works, though.
@@ -86,8 +90,31 @@ def lightLevel(turnTreeOn):
             sense.low_light = False                                                                                               #Bright display (down is actually up)
         else:
             pass
-    
-        
+
+def mToi(pValue):
+    answer = pValue * 0.0295301
+    return answer
+
+
+def initBarometer(baromArr, baromInt):
+    currentPressure = int(mToi(sense.get_pressure()) * 100) / 100.
+    i = int(baromInt) + 1       #Initialize the array to the number of one-second slots we'll need
+    baromArr = [currentPressure] * i
+    return baromArr
+
+def shiftPressures(baromArr, currPress):     #shift all historic barometer values to the left
+    for i in range (1, len(baromArr)):
+        baromArr[i - 1] = baromArr[i]
+        baromArr[len(baromArr) - 1] = currPress
+    return baromArr
+
+barometerTimer = 0      #Initialize counter
+currentPressure = int(mToi(sense.get_pressure()) * 100) / 100.
+
+pressureArray = []                                              #Define array for barometric pressure - will be a sliding window that updates every minute
+pressureArray = initBarometer(pressureArray, barometerInterval) #Start with the same value every minute. Eventually we'll be able to look back once a minute to the value a barometerInterval ago.
+#print pressureArray, len(pressureArray)
+
 #Feel free to change the shape of the tree. The shape you choose will be preserved because of the rules listed above
 #  but the colors of individual pixels will flicker between green and a random color.
 
@@ -137,10 +164,28 @@ while True:
         sense.set_pixel(randx,randy,green)
     topdelay = topdelay + 1
     #This is the number of twinkles between treetop updates, connected to the update interval. Should be about 1 second per update.
-    if topdelay == treetopInterval:                   
+    if topdelay == treetopInterval:
+        if blinkingBarometer:
+####New code to get the treetop to blink different colors for barometric pressure
+            currentPressure = int(mToi(sense.get_pressure()) * 100) / 100.   #make sure the change is significant - two decimal places
+            pressureArray = shiftPressures(pressureArray, currentPressure)                  #put the new pressure at the end of the array
+            oldPressure = pressureArray[0]                                  #look back as far as possible
+            #                print oldPressure, currentPressure, pressureArray
+            #                currentPressure = currentPressure * (random() + 0.5)
+            #                print oldPressure, currentPressure
+            if oldPressure > currentPressure:
+                dotColor = red          #pressure falling
+            elif oldPressure < currentPressure:
+                dotColor = green        #Pressure rising
+            else:
+                dotColor = white        #Pressure steady (within margin of error)
+        else:
+            dotColor = red
+####end of barometer code
+
         top = sense.get_pixel(4,0)
         if top == black:
-            sense.set_pixel(4,0,red)
+            sense.set_pixel(4,0,dotColor)
         else:
             sense.set_pixel(4,0,black)
         topdelay = 0

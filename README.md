@@ -11,4 +11,6 @@ Discovered a bug that caused the tree to gradually turn brown. Fixed the problem
 
 12/17/2018: LEDs are very bright, so added function to the up and down movements of the switch to exit and enter low_light mode. Note that the program is designed to be run inverted (power cable on the top of the Pi), so the down and up functions of the switch are reversed. Also changed default behavior to turn on and off once per day, instead of running all the time.
 
-Note: Default behavior - tree on all the time, doesn't die, top light cycles once per second, other lights twinkle once per 0.01 second.
+11/29/2019: Added barometer function to the flashing treetop. Flashes red for falling barometer, green for rising, white for steady. Barometer interval parameter for comparison interval. Function can be turned off using parameter.
+
+Note: Default behavior - tree on all the time, doesn't die, top light cycles once per second with barometer function, other lights twinkle once per 0.01 second.
