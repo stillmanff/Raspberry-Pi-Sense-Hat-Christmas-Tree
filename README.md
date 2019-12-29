@@ -14,3 +14,5 @@ Discovered a bug that caused the tree to gradually turn brown. Fixed the problem
 11/29/2019: Added barometer function to the flashing treetop. Flashes red for falling barometer, green for rising, white for steady. Barometer interval parameter for comparison interval. Function can be turned off using parameter.
 
 Note: Default behavior - tree on all the time, doesn't die, top light cycles once per second with barometer function, other lights twinkle once per 0.01 second.
+
+12/29/2019: Tuned barometer behavior, which was way too sensitive to trivial fluctuations. Barometer now averages the most recent five minutes of readings and the oldest five minutes of readings, and looks for a change of 0.01 in/hg or more. The five minute average is hardcoded but the tolerance is parameterized to allow the sensitivity of the barometer to be tuned. Changed look-back period to two hours, which is a useful length of time for comparing barometric pressures. Look-back (in seconds) is also now parameterized to allow for barometer tuning.

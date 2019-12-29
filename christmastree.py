@@ -27,8 +27,9 @@ activeTimeStartHour = 7
 activeTimeStartMinute = 0
 treeAlwaysActive = False                       #If True, tree is always on regardless of clock settings.
 sense.low_light = True                        #Start with dim lights - it just looks better.
-barometerInterval = 1800   # Update barometer value in seconds - twice per hour seems like a good interval
+barometerInterval = 3600 * 2   # Update barometer value array size - two hours so we can compare old to new values
 blinkingBarometer = True   # Enable tree topper as barometric pressure indicator
+barometerTolerance = 0.01  # parameter for tuning the sensitivity of the barometer LED
 #End of variables section
 ###########################################################################################################################################
 
@@ -106,14 +107,32 @@ def shiftPressures(baromArr, currPress):     #shift all historic barometer value
     for i in range (1, len(baromArr)):
         baromArr[i - 1] = baromArr[i]
         baromArr[len(baromArr) - 1] = currPress
+        #for cell in range(len(baromArr) - 5, len(baromArr) - 1):
+        #        print (baromArr[cell], ', ')
     return baromArr
+
+def avgPressure(baromArr, phase):            #Get the average pressure for the five minutes at the start or end of the time period. Avoids frequent changes in top dot color.
+    period = 300              #number of entries to be averaged, in seconds
+    avg = 0
+    if (phase == 'first'):
+        start = 0
+    elif (phase == 'last'):
+        start = len(baromArr) - period
+    else:
+        start = 0                             #this shouldn't happen, so just return an arbitrary value
+    for i in range (start, start + period):
+        avg = avg + baromArr[i]
+    avg = avg / period                            #We could return the total instead of the average, but this would be easier to debug if needed
+    avg = int(avg * 1000) / 1000.               #Round to three decimal places so we can do the math later
+    return avg
+        
 
 barometerTimer = 0      #Initialize counter
 currentPressure = int(mToi(sense.get_pressure()) * 100) / 100.
 
 pressureArray = []                                              #Define array for barometric pressure - will be a sliding window that updates every minute
 pressureArray = initBarometer(pressureArray, barometerInterval) #Start with the same value every minute. Eventually we'll be able to look back once a minute to the value a barometerInterval ago.
-#print pressureArray, len(pressureArray)
+#print (pressureArray, len(pressureArray))
 
 #Feel free to change the shape of the tree. The shape you choose will be preserved because of the rules listed above
 #  but the colors of individual pixels will flicker between green and a random color.
@@ -170,12 +189,15 @@ while True:
             currentPressure = int(mToi(sense.get_pressure()) * 100) / 100.   #make sure the change is significant - two decimal places
             pressureArray = shiftPressures(pressureArray, currentPressure)                  #put the new pressure at the end of the array
             oldPressure = pressureArray[0]                                  #look back as far as possible
-            #                print oldPressure, currentPressure, pressureArray
+            
             #                currentPressure = currentPressure * (random() + 0.5)
             #                print oldPressure, currentPressure
-            if oldPressure > currentPressure:
+            oldAvg = avgPressure(pressureArray, 'first')
+            currAvg = avgPressure(pressureArray, 'last')
+#            print (oldPressure, currentPressure, oldAvg, currAvg)
+            if oldAvg - currAvg > barometerTolerance:
                 dotColor = red          #pressure falling
-            elif oldPressure < currentPressure:
+            elif oldAvg - currAvg < barometerTolerance * -1.0:
                 dotColor = green        #Pressure rising
             else:
                 dotColor = white        #Pressure steady (within margin of error)
