@@ -19,7 +19,8 @@ cyan         = [0,252,252] # cyan - not used at the moment
 #Variables section (change these to change the way the program behaves. Let everything else alone.
 #Timing parameters (how often things change)
 twinkleInterval = 0.01                        #Interval in seconds between changes in any light
-treetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off
+defaultTreetopInterval = int(1 / twinkleInterval)    #Number of seconds between top light turning on and off. Will be adjusted based on speed of barometer change.
+treetopInterval = defaultTreetopInterval
 treeDies = False                              #Turn a bug into a feature - if true, the tree gradually turns brown (takes about 2 days)
 quietTimeStartHour = 23                       #Time to turn display off and on (mostly for people who are bugged by the lights at night)
 quietTimeStartMinute = 0
@@ -30,6 +31,7 @@ sense.low_light = True                        #Start with dim lights - it just l
 barometerInterval = 3600 * 2   # Update barometer value array size - two hours so we can compare old to new values
 blinkingBarometer = True   # Enable tree topper as barometric pressure indicator
 barometerTolerance = 0.01  # parameter for tuning the sensitivity of the barometer LED
+fastBarometerTolerance = 0.02   #parameter for showing faster flash if barometer is rising or falling rapidly
 #End of variables section
 ###########################################################################################################################################
 
@@ -201,8 +203,18 @@ while True:
                 dotColor = green        #Pressure rising
             else:
                 dotColor = white        #Pressure steady (within margin of error)
+
+#Update - add fast blink if barometer is changing rapidly
+            if (abs(oldAvg - currAvg) >= fastBarometerTolerance) and (treetopInterval == defaultTreetopInterval):   #Did barometer just start rising or falling rapidly?
+                treetopInterval = int(treetopInterval / 4)       #Double the treetop blink rate
+            elif (abs(oldAvg - currAvg) < fastBarometerTolerance) and (treetopInterval != defaultTreetopInterval):  #Did barometer just stop rising or falling rapidly?
+                treetopInterval = defaultTreetopInterval         #Reset to default blink rate
+            else:
+                pass          #Nothing changes
+            print (oldAvg, currAvg, abs(oldAvg - currAvg))
+                    
         else:
-            dotColor = red
+            dotColor = red              #If we're not using the barometer, make the tree top flash red, because it looks nice
 ####end of barometer code
 
         top = sense.get_pixel(4,0)
